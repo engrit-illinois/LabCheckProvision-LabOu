@@ -38,14 +38,29 @@ WIP
 
 # Parameters
 
-### -LabOUDN
+### -LabOUDN \<string\>
 Required string.  
 The distinguished name of the OU to "Covidize".  
 
+### -Provision
+Optional switch.  
+WIP  
+
+### -Deprovision
+Optional switch.  
+WIP  
+
+### -Covidize
+Optional switch.  
+WIP  
+
 ### -Uncovidize
 Optional switch.  
-Performs the reverse operations to the given lab OU as would be done by the script if `-Uncovidize` was not specified.  
-All computers in sub-OUs are moved to the root lab OU.  
+WIP  
+
+### -TestRun
+Optional switch.  
+WIP  
 
 ### -Delay
 Optional integer.  
