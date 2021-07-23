@@ -1,4 +1,4 @@
-# Documentation home: https://github.com/engrit-illinois/Covidize-LabOU
+# Documentation home: https://github.com/engrit-illinois/LabCheckProvision-LabOu
 # By mseng3
 
 function LabCheckProvision-LabOu {
