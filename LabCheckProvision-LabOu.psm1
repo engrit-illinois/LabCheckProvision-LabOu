@@ -23,73 +23,92 @@ function LabCheckProvision-LabOu {
 		
 		[switch]$TestRun
 	)
-	
-	function log($msg) {
-		Write-Host $msg
+
+	function log {
+		param (
+			[Parameter(Position=0)]
+			[string]$Msg = "",
+
+			[int]$L = 0
+		)
+
+		for($i = 0; $i -lt $L; $i += 1) {
+			$Msg = "    $Msg"
+		}
+
+		$ts = Get-Date -Format "HH:mm:ss"
+		$Msg = "[$ts] $Msg"
+
+		Write-Host $Msg
 	}
 	
 	function Delay {
-		log "    Waiting $Delay seconds for DC sync..."
+		log "Waiting $Delay seconds for DC sync..." -L 2
 		Start-Sleep -Seconds $Delay
 	}
 	
-	function Make($name, $parent) {
-		$ou = "OU=$name,$parent"
-		#log "    Making ou: `"$ou`"..."
+	function Create-OU($name, $parent) {
+		log "Creating OU `"$name`" in parent `"$parent`"..." -L 1
 		
+		$ou = "OU=$name,$parent"
+				
 		if(Test-OUExists $parent) {
-			log "    Parent OU exists."
+			log "Parent OU exists." -L 2
 			
 			if(Test-OUExists $ou) {
-				"    OU already exists."
+				"OU already exists." -L 2
 			}
 			else {
 				if($TestRun) {
-					log "Skipping OU creation because -TestRun was specified."
+					log "Skipping OU creation because -TestRun was specified." -L 2
 				}
 				else {
-					log "Creating OU..."
+					log "Creating OU..." -L 2
 					New-ADOrganizationalUnit -Name $name -Path $parent | Out-Null
 				}
-				log "    Done."
+				log "Done." -L 2
 				Delay
 			}
 		}
 		else {
-			log "    Parent OU doesn't exist: `"$parent`"!"
+			log "Parent OU doesn't exist: `"$parent`"!" -L 2
 		}
 	}
 	
 	function Link($name, $ou) {
+		log "Linking GPO `"$name`" to OU `"$ou`"..." -L 1
+		
 		if(Test-GPOLinked $name $ou) {
-			log "    GPO already linked."
+			log "GPO already linked." -L 2
 		}
 		else {
 			if($TestRun) {
-				log "Skipping link creation because -TestRun was specified."
+				log "Skipping link creation because -TestRun was specified." -L 2
 			}
 			else {
-				log "Creating link..."
+				log "Creating link..." -L 2
 				New-GPLink -Name $name -Target $ou | Out-Null
 			}
-			log "    Done."
+			log "Done." -L 2
 			#Delay
 		}
 	}
 	
 	function Unlink($name, $ou) {
+		log "Unlinking GPO `"$name`" from OU `"$ou`"..." -L 1
+		
 		if(-not (Test-GPOLinked $name $ou)) {
-			log "    GPO not linked to begin with."
+			log "Link not found." -L 2
 		}
 		else {
 			if($TestRun) {
-				log "Skipping link deletion because -TestRun was specified."
+				log "Skipping link deletion because -TestRun was specified." -L 2
 			}
 			else {
-				log "Deleting link..."
-				New-GPLink -Name $name -Target $ou | Out-Null
+				log "Deleting link..." -L 2
+				Remove-GPLink -Name $name -Target $ou | Out-Null
 			}
-			log "    Done."
+			log "Done." -L 2
 			#Delay
 		}
 	}
@@ -98,11 +117,11 @@ function LabCheckProvision-LabOu {
 		#log "Testing if ou exists: `"$ou`"..."
 		try {
 			Get-ADOrganizationalUnit -Identity $ou | Out-Null
-			#log "    OU exists."
+			#log "OU exists."
 			$ouExists = $true
 		}
 		catch [Microsoft.ActiveDirectory.Management.ADIdentityNotFoundException] {
-			#log "    OU does not exist."
+			#log "OU does not exist."
 			$ouExists = $false
 		}
 		$ouExists
@@ -118,88 +137,72 @@ function LabCheckProvision-LabOu {
 	}
 	
 	function Provision($remoteEnabledOudn, $localDisabledOudn) {
-		# RemoteEnabled sub-OU
-		log "Creating RemoteEnabled OU..."
-		Make "RemoteEnabled" $LabOudn
+		log "Provisioning..."
 		
-		log "Linking access GPO to RemoteEnabled OU..."
+		# RemoteEnabled sub-OU
+		Make "RemoteEnabled" $LabOudn
 		Link "ENGR EWS $lab RDU" $remoteEnabledOudn
 		
 		# LocalLoginDisabled (i.e. Remote-Only) sub-OU
-		log "Creating LocalLoginDisabled OU..."
 		Make "LocalLoginDisabled" $remoteEnabledOudn
-		
-		log "Linking access GPO to LocalLoginDisabled OU..."
 		Link "ENGR EWS Restrict local login to admins" $localDisabledOudn
 	}
 	
 	function Covidize($remoteEnabledOudn, $localDisabledOudn) {
-		# Root lab OU
-		log "Linking background GPO to root lab OU..."
-		Link "ENGR EWS COVID Local-Only Desktop-Lockscreen Background" $LabOudn
+		log "Covidizing..."
 		
-		log "Linking login message GPO to root lab OU..."
+		# Root lab OU
+		Link "ENGR EWS COVID Local-Only Desktop-Lockscreen Background" $LabOudn
 		Link "ENGR EWS COVID Local-Only Login Message" $LabOudn
 		
 		# RemoteEnabled sub-OU
-		log "Linking background GPO to RemoteEnabled OU..."
 		Link "ENGR EWS General Lab Desktop-Lockscreen Background" $remoteEnabledOudn
-		
-		log "Linking login message GPO to RemoteEnabled OU..."
 		Link "ENGR EWS COVID Remote-Enabled (i.e. no) Login Message" $remoteEnabledOudn
 		
 		# LocalLoginDisabled (i.e. Remote-Only) sub-OU
-		log "Linking background GPO to LocalLoginDisabled OU..."
 		Link "ENGR EWS COVID Remote-Only Desktop-Lockscreen Background" $localDisabledOudn
-		
-		log "Linking login message GPO to LocalLoginDisabled OU..."
 		Link "ENGR EWS COVID Remote-Only Login Message" $localDisabledOudn
 	}
 	
 	function Uncovidize($remoteEnabledOu, $localDisabledOu) {
-		# Root lab OU
-		log "Unlinking background GPO from root lab OU..."
-		Unlink "ENGR EWS COVID Local-Only Desktop-Lockscreen Background" $LabOudn
+		log "Uncovidizing..."
 		
-		log "Unlinking login message GPO from root lab OU..."
+		# Root lab OU
+		Unlink "ENGR EWS COVID Local-Only Desktop-Lockscreen Background" $LabOudn
 		Unlink "ENGR EWS COVID Local-Only Login Message" $LabOudn
 		
 		# RemoteEnabled sub-OU
-		log "Unlinking background GPO from RemoteEnabled OU..."
 		Unlink "ENGR EWS General Lab Desktop-Lockscreen Background" $remoteEnabledOudn
-		
-		log "Unlinking login message GPO from RemoteEnabled OU..."
 		Unlink "ENGR EWS COVID Remote-Enabled (i.e. no) Login Message" $remoteEnabledOudn
 		
 		# LocalLoginDisabled (i.e. Remote-Only) sub-OU
-		log "Unlinking background GPO from LocalLoginDisabled OU..."
 		Unlink "ENGR EWS COVID Remote-Only Desktop-Lockscreen Background" $localDisabledOudn
-		
-		log "Unlinking login message GPO from LocalLoginDisabled OU..."
 		Unlink "ENGR EWS COVID Remote-Only Login Message" $localDisabledOudn
-		
 	}
 	
 	function Deprovision($remoteEnabledOu, $localDisabledOu) {
-		log "Not implemented yet!"
+		log "Deprovisioning..."
+		log "Not implemented yet!" -L 1
 	}
 	
 	function Do-Stuff {
 		if(Test-OUExists $LabOudn) {
+			log "OUs:"
 			$labOuParts = $LabOudn.Split(",")
 			$lab = $labOuParts[0].Split("=")[1]
-			log "Lab OU name: `"$lab`"."
+			log "Lab OU name: `"$lab`"." -L 1
+			log "Lab OUDN: `"$LabOudn`"." -L 1
 			
 			$remoteEnabledOudn = "OU=RemoteEnabled,$LabOudn"
-			log "RemoteEnabled OUDN: `"$remoteEnabledOudn`"."
+			log "RemoteEnabled OUDN: `"$remoteEnabledOudn`"." -L 1
 			
 			$localDisabledOudn = "OU=LocalLoginDisabled,$remoteEnabledOudn"
-			log "LocalLoginDisabled OUDN: `"$localDisabledOudn`"."
+			log "LocalLoginDisabled OUDN: `"$localDisabledOudn`"." -L 1
 	
-			if($Provision) { Provision $remoteEnabledOudn, $localDisabledOudn }
-			elseif($Covidize) { Covidize $remoteEnabledOudn, $localDisabledOudn }
-			elseif($Uncovidize) { Uncovidize $remoteEnabledOudn, $localDisabledOudn }
-			elseif($Deprovision) { Deprovision $remoteEnabledOudn, $localDisabledOudn }
+			if($Provision) { Provision $remoteEnabledOudn $localDisabledOudn }
+			elseif($Covidize) { Covidize $remoteEnabledOudn $localDisabledOudn }
+			elseif($Uncovidize) { Uncovidize $remoteEnabledOudn $localDisabledOudn }
+			elseif($Deprovision) { Deprovision $remoteEnabledOudn $localDisabledOudn }
 			else { log "No action switch was specified!" }
 		}
 		else {
