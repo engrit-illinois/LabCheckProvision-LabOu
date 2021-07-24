@@ -9,18 +9,40 @@ Full documentation is at https://wiki.illinois.edu/wiki/display/engritprivate/EW
 3. Run it using the provided examples and documentation below.
 
 # Behavior
+The following 4 actions can be specified via the associated parameter. Only one action can be specified at a time. The steps each action takes are documented below.  
 
 ### Provisioning
-WIP
-
-### Deprovisioning
-WIP
+When specifying the `-Provision` parameter:  
+1. A `RemoteEnabled` OU is created under the given parent lab OU.
+2. A `LocalLoginDisabled` OU is created under the new `RemoteEnabled` OU.
+3. A GPO named `ENGR EWS <lab name> RDU` is linked to the `RemoteEnabled` OU if such a GPO exists. The GPO must be created manually.
+4. A GPO named `ENGR EWS Restrict local login to admins` is linked to the `LocalLoginDisabled` OU.
 
 ### Covidizing
-WIP
+The given parent lab OU must be provisioned first.  
+
+When specifying the `-Covidize` parameter:  
+1. The following GPOs are linked to the given parent lab OU:
+  - `ENGR EWS COVID Local-Only Desktop-Lockscreen Background`
+  - `ENGR EWS COVID Local-Only Login Message`
+2. The following GPOs are linked to the RemoteEnabled OU:
+  - `ENGR EWS General Lab Desktop-Lockscreen Background`
+  - `ENGR EWS COVID Remote-Enabled (i.e. no) Login Message`
+3. The following GPOs are linked to the LocalLoginDisabled OU:
+  - `ENGR EWS COVID Remote-Only Desktop-Lockscreen Background`
+  - `ENGR EWS COVID Remote-Only Login Message`
 
 ### Uncovidizing
-WIP
+The given parent lab OU must be provisioned first.  
+
+When specifying the `-Uncovidize` parameter:  
+1. All of the GPOs noted above in the `Covidizing` section are unlinked from their respective OUs.
+
+### Deprovisioning
+The given parent lab OU must be provisioned first.  
+
+When specifying the `-Deprovision` parameter:  
+1. WIP
 
 ### Delays
 When an operation depends on the preceeding operation (such as linking a GPO to a newly created OU), a delay is implemented between the operations, to allow for the changes to sync across domain controllers and prevent errors. This delay can be configured using the `-Delay` parameter.  
