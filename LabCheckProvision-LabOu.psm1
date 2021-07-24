@@ -42,12 +42,36 @@ function LabCheckProvision-LabOu {
 		Write-Host $Msg
 	}
 	
+	function Log-Object {
+		param(
+			[PSObject]$Object,
+			[string]$Format = "Table",
+			[int]$L = 0
+		)
+		
+		switch($Format) {
+			"List" { $string = ($object | Format-List | Out-String) }
+			Default { $string = ($object | Format-Table -AutoSize | Out-String) }
+		}
+		$string = $string.Trim()
+		$lines = $string -split "`n"
+
+		$params = @{
+			L = $L
+		}
+
+		foreach($line in $lines) {
+			$params["Msg"] = $line
+			log @params
+		}
+	}
+	
 	function Delay {
 		log "Waiting $Delay seconds for DC sync..." -L 2
 		Start-Sleep -Seconds $Delay
 	}
 	
-	function Create-OU($name, $parent) {
+	function Create-Ou($name, $parent) {
 		log "Creating OU `"$name`" in parent `"$parent`"..." -L 1
 		
 		$ou = "OU=$name,$parent"
@@ -56,7 +80,7 @@ function LabCheckProvision-LabOu {
 			log "Parent OU exists." -L 2
 			
 			if(Test-OUExists $ou) {
-				"OU already exists." -L 2
+				log "OU already exists." -L 2
 			}
 			else {
 				if($TestRun) {
@@ -140,11 +164,11 @@ function LabCheckProvision-LabOu {
 		log "Provisioning..."
 		
 		# RemoteEnabled sub-OU
-		Make "RemoteEnabled" $LabOudn
+		Create-Ou "RemoteEnabled" $LabOudn
 		Link "ENGR EWS $lab RDU" $remoteEnabledOudn
 		
 		# LocalLoginDisabled (i.e. Remote-Only) sub-OU
-		Make "LocalLoginDisabled" $remoteEnabledOudn
+		Create-Ou "LocalLoginDisabled" $remoteEnabledOudn
 		Link "ENGR EWS Restrict local login to admins" $localDisabledOudn
 	}
 	
@@ -164,7 +188,7 @@ function LabCheckProvision-LabOu {
 		Link "ENGR EWS COVID Remote-Only Login Message" $localDisabledOudn
 	}
 	
-	function Uncovidize($remoteEnabledOu, $localDisabledOu) {
+	function Uncovidize($remoteEnabledOudn, $localDisabledOudn) {
 		log "Uncovidizing..."
 		
 		# Root lab OU
@@ -180,9 +204,33 @@ function LabCheckProvision-LabOu {
 		Unlink "ENGR EWS COVID Remote-Only Login Message" $localDisabledOudn
 	}
 	
-	function Deprovision($remoteEnabledOu, $localDisabledOu) {
+	function Deprovision($remoteEnabledOudn, $localDisabledOudn) {
 		log "Deprovisioning..."
-		log "Not implemented yet!" -L 1
+		
+		# Check for objects in RemoteEnabled and LocalLoginDisabled OUs
+		log "Checking for child objects in the RemoteEnabled OU..." -L 1
+		
+		$objects = Get-ADObject -Filter "*" -SearchBase $remoteEnabledOudn
+		$objects = $objects | Where { ($_.DistinguishedName -ne $remoteEnabledOudn) -and ($_.DistinguishedName -ne $localDisabledOudn) }
+		log "Found $(@($objects).count) child objects (excluding the RemoteEnabled OU itself and the LocalLoginDisabled OU)." -L 2
+		
+		if(@($objects).count -gt 0) {
+			$objectsOutput = $objects | Select ObjectClass,Name,@{Name="DistinguishedName";Expression={$_.DistinguishedName -replace "OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu","..."}} | Sort ObjectClass,Name
+			Log-Object $objectsOutput -L 3
+			log ""
+			log "This script is currently too dumb to move these objects. Please move them outside of the RemoteEnabled OU and try again." -L 2
+		}
+		else {
+			log "Removing RemoteEnabled and LocalLoginDisabled OUs..." -L 1
+			
+			log "Removing `"Prevent object from accidental deletion`" setting from OUs..." -L 2
+			Set-ADObject -ProtectedFromAccidentalDeletion $false -Identity $remoteEnabledOudn
+			Set-ADObject -ProtectedFromAccidentalDeletion $false -Identity $localDisabledOudn
+			
+			log "Removing OUs..."
+			Remove-ADOrganizationalUnit -Identity $remoteEnabledOudn
+			Remove-ADOrganizationalUnit -Identity $localDisabledOudn
+		}
 	}
 	
 	function Do-Stuff {
