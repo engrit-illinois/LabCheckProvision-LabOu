@@ -22,6 +22,9 @@ WIP
 ### Uncovidizing
 WIP
 
+### Delays
+When an operation depends on the preceeding operation (such as linking a GPO to a newly created OU), a delay is implemented between the operations, to allow for the changes to sync across domain controllers and prevent errors. This delay can be configured using the `-Delay` parameter.  
+
 # Examples
 
 ### Provision a lab OU

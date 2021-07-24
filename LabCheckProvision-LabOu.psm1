@@ -66,20 +66,20 @@ function LabCheckProvision-LabOu {
 		}
 	}
 	
-	function Delay {
-		log "Waiting $Delay seconds for DC sync..." -L 2
+	function Delay($L) {
+		log "Waiting $Delay seconds for DC sync..." -L $L
 		Start-Sleep -Seconds $Delay
 	}
 	
 	function Create-Ou($name, $parent) {
 		log "Creating OU `"$name`" in parent `"$parent`"..." -L 1
 		
-		$ou = "OU=$name,$parent"
+		$oudn = "OU=$name,$parent"
 				
-		if(Test-OUExists $parent) {
+		if(Test-OuExists $parent) {
 			log "Parent OU exists." -L 2
 			
-			if(Test-OUExists $ou) {
+			if(Test-OuExists $oudn) {
 				log "OU already exists." -L 2
 			}
 			else {
@@ -89,9 +89,9 @@ function LabCheckProvision-LabOu {
 				else {
 					log "Creating OU..." -L 2
 					New-ADOrganizationalUnit -Name $name -Path $parent | Out-Null
+					Delay -L 2
 				}
-				log "Done." -L 2
-				Delay
+				
 			}
 		}
 		else {
@@ -99,10 +99,10 @@ function LabCheckProvision-LabOu {
 		}
 	}
 	
-	function Link($name, $ou) {
-		log "Linking GPO `"$name`" to OU `"$ou`"..." -L 1
+	function Link($name, $oudn) {
+		log "Linking GPO `"$name`" to OU `"$oudn`"..." -L 1
 		
-		if(Test-GPOLinked $name $ou) {
+		if(Test-GPOLinked $name $oudn) {
 			log "GPO already linked." -L 2
 		}
 		else {
@@ -111,36 +111,55 @@ function LabCheckProvision-LabOu {
 			}
 			else {
 				log "Creating link..." -L 2
-				New-GPLink -Name $name -Target $ou | Out-Null
+				New-GPLink -Name $name -Target $oudn | Out-Null
+				#Delay
 			}
-			log "Done." -L 2
-			#Delay
 		}
 	}
 	
-	function Unlink($name, $ou) {
-		log "Unlinking GPO `"$name`" from OU `"$ou`"..." -L 1
+	function Unlink($name, $oudn, $L=1) {
+		log "Unlinking GPO `"$name`" from OU `"$oudn`"..." -L $L
 		
-		if(-not (Test-GPOLinked $name $ou)) {
-			log "Link not found." -L 2
+		if(-not (Test-GPOLinked $name $oudn)) {
+			log "Link not found." -L ($L + 1)
 		}
 		else {
 			if($TestRun) {
-				log "Skipping link deletion because -TestRun was specified." -L 2
+				log "Skipping link deletion because -TestRun was specified." -L ($L + 1)
 			}
 			else {
-				log "Deleting link..." -L 2
-				Remove-GPLink -Name $name -Target $ou | Out-Null
+				log "Deleting link..." -L ($L + 1)
+				Remove-GPLink -Name $name -Target $oudn | Out-Null
+				#Delay
 			}
-			log "Done." -L 2
-			#Delay
 		}
 	}
 	
-	function Test-OUExists($ou) {
-		#log "Testing if ou exists: `"$ou`"..."
+	function Delete-Ou($oudn) {
+		log "Removing OU `"$oudn`"..." -L 2
+		
+		if(Test-OuExists $oudn) {
+			if($TestRun) {
+				log "Skipping OU deletion because -TestRun was specified." -L 3
+			}
+			else {
+				log "Removing `"Prevent object from accidental deletion`" setting from OU `"$oudn`"..." -L 3
+				Set-ADObject -ProtectedFromAccidentalDeletion $false -Identity $oudn | Out-Null
+				Delay -L 3
+				log "Removing OU..." -L 3
+				Remove-ADOrganizationalUnit -Identity $oudn -Confirm:$false | Out-Null
+				Delay -L 3
+			}
+		}
+		else {
+			log "OU `"$oudn`" not found!" -L 3
+		}
+	}
+	
+	function Test-OuExists($oudn) {
+		#log "Testing if ou exists: `"$oudn`"..."
 		try {
-			Get-ADOrganizationalUnit -Identity $ou | Out-Null
+			Get-ADOrganizationalUnit -Identity $oudn | Out-Null
 			#log "OU exists."
 			$ouExists = $true
 		}
@@ -187,7 +206,7 @@ function LabCheckProvision-LabOu {
 		Link "ENGR EWS COVID Remote-Only Desktop-Lockscreen Background" $localDisabledOudn
 		Link "ENGR EWS COVID Remote-Only Login Message" $localDisabledOudn
 	}
-	
+		
 	function Uncovidize($remoteEnabledOudn, $localDisabledOudn) {
 		log "Uncovidizing..."
 		
@@ -207,34 +226,37 @@ function LabCheckProvision-LabOu {
 	function Deprovision($remoteEnabledOudn, $localDisabledOudn) {
 		log "Deprovisioning..."
 		
-		# Check for objects in RemoteEnabled and LocalLoginDisabled OUs
-		log "Checking for child objects in the RemoteEnabled OU..." -L 1
-		
-		$objects = Get-ADObject -Filter "*" -SearchBase $remoteEnabledOudn
-		$objects = $objects | Where { ($_.DistinguishedName -ne $remoteEnabledOudn) -and ($_.DistinguishedName -ne $localDisabledOudn) }
-		log "Found $(@($objects).count) child objects (excluding the RemoteEnabled OU itself and the LocalLoginDisabled OU)." -L 2
-		
-		if(@($objects).count -gt 0) {
-			$objectsOutput = $objects | Select ObjectClass,Name,@{Name="DistinguishedName";Expression={$_.DistinguishedName -replace "OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu","..."}} | Sort ObjectClass,Name
-			Log-Object $objectsOutput -L 3
-			log ""
-			log "This script is currently too dumb to move these objects. Please move them outside of the RemoteEnabled OU and try again." -L 2
+		if(Test-OuExists $remoteEnabledOudn) {
+			# Check for objects in RemoteEnabled and LocalLoginDisabled OUs
+			log "Checking for child objects in the RemoteEnabled OU..." -L 1
+			
+			$objects = Get-ADObject -Filter "*" -SearchBase $remoteEnabledOudn
+			$objects = $objects | Where { ($_.DistinguishedName -ne $remoteEnabledOudn) -and ($_.DistinguishedName -ne $localDisabledOudn) }
+			log "Found $(@($objects).count) child objects (excluding the RemoteEnabled OU itself and the LocalLoginDisabled OU)." -L 2
+			
+			if(@($objects).count -gt 0) {
+				$objectsOutput = $objects | Select ObjectClass,Name,@{Name="DistinguishedName";Expression={$_.DistinguishedName -replace "OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu","..."}} | Sort ObjectClass,Name
+				Log-Object $objectsOutput -L 3
+				log ""
+				log "This script is currently too dumb to move these objects. Please move them outside of the RemoteEnabled OU and try again." -L 2
+			}
+			else {
+				log "Removing RemoteEnabled and LocalLoginDisabled OUs..." -L 1
+				Delete-Ou $localDisabledOudn
+				Delete-Ou $remoteEnabledOudn
+				
+				log "Unlinking any remaining Covid GPOs from the root lab OU, if they exist..." -L 1
+				Unlink "ENGR EWS COVID Local-Only Desktop-Lockscreen Background" $LabOudn 2
+				Unlink "ENGR EWS COVID Local-Only Login Message" $LabOudn 2
+			}
 		}
 		else {
-			log "Removing RemoteEnabled and LocalLoginDisabled OUs..." -L 1
-			
-			log "Removing `"Prevent object from accidental deletion`" setting from OUs..." -L 2
-			Set-ADObject -ProtectedFromAccidentalDeletion $false -Identity $remoteEnabledOudn
-			Set-ADObject -ProtectedFromAccidentalDeletion $false -Identity $localDisabledOudn
-			
-			log "Removing OUs..."
-			Remove-ADOrganizationalUnit -Identity $remoteEnabledOudn
-			Remove-ADOrganizationalUnit -Identity $localDisabledOudn
+			log "RemoteEnabled OU not found!" -L 1
 		}
 	}
 	
 	function Do-Stuff {
-		if(Test-OUExists $LabOudn) {
+		if(Test-OuExists $LabOudn) {
 			log "OUs:"
 			$labOuParts = $LabOudn.Split(",")
 			$lab = $labOuParts[0].Split("=")[1]
