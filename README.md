@@ -30,45 +30,45 @@ Provisions the given parent lab OU for remote access.
 When specifying the `-Provision` parameter:  
 1. A `RemoteEnabled` OU is created under the given parent lab OU.
 2. A `LocalLoginDisabled` OU is created under the new `RemoteEnabled` OU.
-3. A GPO named `ENGR EWS <lab name> RDU` is linked to the `RemoteEnabled` OU if such a GPO exists. The GPO must be created manually.
-4. A GPO named `ENGR EWS Restrict local login to admins` is linked to the `LocalLoginDisabled` OU.
+3. The GPO named `ENGR EWS <lab-name> RDU` is linked to the `RemoteEnabled` OU if such a GPO exists. The GPO must be manually created beforehand. `<lab-name>` must exactly mirror the name of the given parent OU.
+4. The existing GPO named `ENGR EWS Restrict local login to admins` is linked to the `LocalLoginDisabled` OU.
 
-Example: `LabCheckProvision-LabOU -Provision "OU=ECEB9999,OU=EWS,OU=Instructional,OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu"`.  
+Example:  
+`LabCheckProvision-LabOU -Provision "OU=ECEB-9999,OU=EWS,OU=Instructional,OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu"`
 
 ### -Covidize
 Optional switch.  
 "Covidizes" the given parent lab OU.  
-
 The given parent lab OU must be provisioned first.  
 
 When specifying the `-Covidize` parameter:  
 1. The following GPOs are linked to the given parent lab OU:
-  - `ENGR EWS COVID Local-Only Desktop-Lockscreen Background`
-  - `ENGR EWS COVID Local-Only Login Message`
+    - `ENGR EWS COVID Local-Only Desktop-Lockscreen Background`
+    - `ENGR EWS COVID Local-Only Login Message`
 2. The following GPOs are linked to the RemoteEnabled OU:
-  - `ENGR EWS General Lab Desktop-Lockscreen Background`
-  - `ENGR EWS COVID Remote-Enabled (i.e. no) Login Message`
+    - `ENGR EWS General Lab Desktop-Lockscreen Background`
+    - `ENGR EWS COVID Remote-Enabled (i.e. no) Login Message`
 3. The following GPOs are linked to the LocalLoginDisabled OU:
-  - `ENGR EWS COVID Remote-Only Desktop-Lockscreen Background`
-  - `ENGR EWS COVID Remote-Only Login Message`
+    - `ENGR EWS COVID Remote-Only Desktop-Lockscreen Background`
+    - `ENGR EWS COVID Remote-Only Login Message`
 
-Example: `LabCheckProvision-LabOU -Covidize "OU=ECEB9999,OU=EWS,OU=Instructional,OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu"`.  
+Example:  
+`LabCheckProvision-LabOU -Covidize "OU=ECEB-9999,OU=EWS,OU=Instructional,OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu"`
 
 ### -Uncovidize
 Optional switch.  
 "Uncovidizes" the given parent lab OU.  
-
 The given parent lab OU must be provisioned first.  
 
 When specifying the `-Uncovidize` parameter:  
 1. All of the GPOs noted above under the `-Covidize` parameter are unlinked from their respective OUs.
 
-Example: `LabCheckProvision-LabOU -Uncovidize "OU=ECEB9999,OU=EWS,OU=Instructional,OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu"`.  
+Example:  
+`LabCheckProvision-LabOU -Uncovidize "OU=ECEB-9999,OU=EWS,OU=Instructional,OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu"`
 
 ### -Deprovision
 Optional switch.  
 Deprovisions the given parent lab OU for both remote access and "covidization".  
-
 The given parent lab OU must be provisioned, and all AD objects (computer, users, groups, OUs, etc.) must be moved out of the `RemoteEnabled` and `LocalLoginDisabled` sub-OUs first.
 
 When specifying the `-Deprovision` parameter:  
@@ -77,13 +77,15 @@ When specifying the `-Deprovision` parameter:
 3. The `RemoteEnabled` OU is removed (along with all GPO links to it).
 4. If the two "COVID" GPOs are linked to the parent lab OU (see above), those links are removed.
 
-Example: `LabCheckProvision-LabOU -Derovision "OU=ECEB9999,OU=EWS,OU=Instructional,OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu"`.  
+Example:  
+`LabCheckProvision-LabOU -Derovision "OU=ECEB-9999,OU=EWS,OU=Instructional,OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu"`
 
 ### -TestRun
 Optional switch.  
 Runs through the given action as normal, except all changes to AD are skipped.  
 
-Example: `LabCheckProvision-LabOU -TestRun -Provision "OU=ECEB9999,OU=EWS,OU=Instructional,OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu"`.  
+Example:  
+`LabCheckProvision-LabOU -TestRun -Provision "OU=ECEB-9999,OU=EWS,OU=Instructional,OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu"`
 
 ### -Delay
 Optional integer.  
