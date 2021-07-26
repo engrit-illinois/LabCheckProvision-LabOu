@@ -8,7 +8,6 @@ Full documentation is at https://wiki.illinois.edu/wiki/display/engritprivate/EW
 2. Make the module available as your SU account: see [here](https://github.com/engrit-illinois/how-to-run-custom-powershell-modules-as-another-user).
 3. Run it using the provided examples and documentation below.
 
-# Behavior
 The following 4 actions can be specified via the associated parameter:  
 - Provision
 - Covidize
