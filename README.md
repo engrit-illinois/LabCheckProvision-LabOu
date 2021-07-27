@@ -18,7 +18,7 @@ Only one action can be specified at a time. The steps each action takes are docu
 
 # Parameters, behavior, and examples
 
-### -LabOUDN \<string\>
+### -LabOudn \<string\>
 Required string.  
 The distinguished name of the parent lab OU on which to take action.  
 
@@ -33,7 +33,7 @@ When specifying the `-Provision` parameter:
 4. The existing GPO named `ENGR EWS Restrict local login to admins` is linked to the `LocalLoginDisabled` OU.
 
 Example:  
-`LabCheckProvision-LabOU -Provision "OU=ECEB-9999,OU=EWS,OU=Instructional,OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu"`
+`LabCheckProvision-LabOU -Provision -LabOudn "OU=ECEB-9999,OU=EWS,OU=Instructional,OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu"`
 
 ### -Covidize
 Optional switch.  
@@ -52,7 +52,7 @@ When specifying the `-Covidize` parameter:
     - `ENGR EWS COVID Remote-Only Login Message`
 
 Example:  
-`LabCheckProvision-LabOU -Covidize "OU=ECEB-9999,OU=EWS,OU=Instructional,OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu"`
+`LabCheckProvision-LabOU -Covidize -LabOudn "OU=ECEB-9999,OU=EWS,OU=Instructional,OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu"`
 
 ### -Uncovidize
 Optional switch.  
@@ -63,7 +63,7 @@ When specifying the `-Uncovidize` parameter:
 1. All of the GPOs noted above under the `-Covidize` parameter are unlinked from their respective OUs.
 
 Example:  
-`LabCheckProvision-LabOU -Uncovidize "OU=ECEB-9999,OU=EWS,OU=Instructional,OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu"`
+`LabCheckProvision-LabOU -Uncovidize -LabOudn "OU=ECEB-9999,OU=EWS,OU=Instructional,OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu"`
 
 ### -Deprovision
 Optional switch.  
@@ -77,14 +77,14 @@ When specifying the `-Deprovision` parameter:
 4. If the two "COVID" GPOs are linked to the parent lab OU (see above), those links are removed.
 
 Example:  
-`LabCheckProvision-LabOU -Derovision "OU=ECEB-9999,OU=EWS,OU=Instructional,OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu"`
+`LabCheckProvision-LabOU -Derovision -LabOudn "OU=ECEB-9999,OU=EWS,OU=Instructional,OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu"`
 
 ### -TestRun
 Optional switch.  
 Runs through the given action as normal, except all changes to AD are skipped.  
 
 Example:  
-`LabCheckProvision-LabOU -TestRun -Provision "OU=ECEB-9999,OU=EWS,OU=Instructional,OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu"`
+`LabCheckProvision-LabOU -TestRun -Provision -LabOudn "OU=ECEB-9999,OU=EWS,OU=Instructional,OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu"`
 
 ### -Delay
 Optional integer.  
