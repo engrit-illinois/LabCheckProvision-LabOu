@@ -74,7 +74,7 @@ When specifying the `-Deprovision` parameter:
 1. A check is made to see if any AD objects exist in the `RemoteEnabled` or `LocalLoginDisabled` sub-OUs of the given lab OU. If any objects exist in these OUs, the script simply exits without making any changes. If no objects are found then...
 2. The `LocalLoginDisabled` OU is removed (along with all GPO links to it).
 3. The `RemoteEnabled` OU is removed (along with all GPO links to it).
-4. If the two "COVID" GPOs are linked to the parent lab OU (see above), those links are removed.
+4. If the two "COVID" GPOs are linked to the parent lab OU (see above), those links are removed. i.e. `-Deprovision` implies `-Uncovidize`.
 
 Example:  
 `LabCheckProvision-LabOU -Deprovision -LabOudn "OU=ECEB-9999,OU=EWS,OU=Instructional,OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu"`
