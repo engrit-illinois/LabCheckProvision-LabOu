@@ -77,7 +77,7 @@ When specifying the `-Deprovision` parameter:
 4. If the two "COVID" GPOs are linked to the parent lab OU (see above), those links are removed.
 
 Example:  
-`LabCheckProvision-LabOU -Derovision -LabOudn "OU=ECEB-9999,OU=EWS,OU=Instructional,OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu"`
+`LabCheckProvision-LabOU -Deprovision -LabOudn "OU=ECEB-9999,OU=EWS,OU=Instructional,OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu"`
 
 ### -TestRun
 Optional switch.  
