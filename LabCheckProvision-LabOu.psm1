@@ -184,7 +184,7 @@ function LabCheckProvision-LabOu {
 		
 		# RemoteEnabled sub-OU
 		Create-Ou "RemoteEnabled" $LabOudn
-		Link "ENGR EWS $lab RDU" $remoteEnabledOudn
+		Link "ENGR EWS RDU $lab" $remoteEnabledOudn
 		
 		# LocalLoginDisabled (i.e. Remote-Only) sub-OU
 		Create-Ou "LocalLoginDisabled" $remoteEnabledOudn

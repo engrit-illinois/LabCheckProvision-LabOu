@@ -29,7 +29,7 @@ Provisions the given parent lab OU for remote access.
 When specifying the `-Provision` parameter:  
 1. A `RemoteEnabled` OU is created under the given parent lab OU.
 2. A `LocalLoginDisabled` OU is created under the new `RemoteEnabled` OU.
-3. The GPO named `ENGR EWS <lab-name> RDU` is linked to the `RemoteEnabled` OU if such a GPO exists. The GPO must be manually created beforehand. `<lab-name>` must exactly mirror the name of the given parent OU.
+3. The GPO named `ENGR EWS RDU <lab-name>` is linked to the `RemoteEnabled` OU if such a GPO exists. The GPO must be manually created beforehand. `<lab-name>` must exactly mirror the name of the given parent OU.
 4. The existing GPO named `ENGR EWS Restrict local login to admins` is linked to the `LocalLoginDisabled` OU.
 
 Example:  
