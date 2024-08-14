@@ -1,6 +1,6 @@
 # Summary
 Takes the OU of an EWS computer lab and adds sub-OUs and links existing GPOs to refactor for standardized remote desktop access, and optionally, COVID social distancing protocols.  
-Full documentation is at https://wiki.illinois.edu/wiki/display/engritprivate/EWS+remote+access+to+Windows+labs  
+Full documentation is at https://uofi.atlassian.net/wiki/spaces/engritinstruction/pages/36191924/EWS+remote+access+to+Windows+labs  
 
 # Usage
 1. Download `LabCheckProvision-LabOU.psm1` to `$HOME\Documents\WindowsPowerShell\Modules\LabCheckProvision-LabOU\LabCheckProvision-LabOU.psm1`.
