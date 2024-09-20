@@ -1,5 +1,5 @@
 # Summary
-Takes the OU of an EWS computer lab and adds sub-OUs and links existing GPOs to refactor for standardized remote desktop access, and optionally, COVID social distancing protocols.  
+Takes the OU of an EWS computer lab and adds sub-OUs and links existing GPOs to refactor for standardized remote desktop access,.  
 Full documentation is at https://uofi.atlassian.net/wiki/spaces/engritinstruction/pages/36191924/EWS+remote+access+to+Windows+labs  
 
 # Usage
@@ -8,10 +8,8 @@ Full documentation is at https://uofi.atlassian.net/wiki/spaces/engritinstructio
 2. Make the module available as your SU account: see [here](https://github.com/engrit-illinois/how-to-run-custom-powershell-modules-as-another-user).
 3. Run it using the provided examples and documentation below.
 
-The following 4 actions can be specified via the associated parameter:  
+The following actions can be specified via the associated parameter:  
 - Provision
-- Covidize
-- Uncovidize
 - Deprovision
 
 Only one action can be specified at a time. The steps each action takes are documented below.  
@@ -35,46 +33,15 @@ When specifying the `-Provision` parameter:
 Example:  
 `LabCheckProvision-LabOU -Provision -LabOudn "OU=ECEB-9999,OU=EWS,OU=Instructional,OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu"`
 
-### -Covidize
-Optional switch.  
-"Covidizes" the given parent lab OU.  
-The given parent lab OU must be provisioned first.  
-
-When specifying the `-Covidize` parameter:  
-1. The following GPOs are linked to the given parent lab OU:
-    - `ENGR EWS COVID Local-Only Desktop-Lockscreen Background`
-    - `ENGR EWS COVID Local-Only Login Message`
-2. The following GPOs are linked to the RemoteEnabled OU:
-    - `ENGR EWS General Lab Desktop-Lockscreen Background`
-    - `ENGR EWS COVID Remote-Enabled (i.e. no) Login Message`
-3. The following GPOs are linked to the LocalLoginDisabled OU:
-    - `ENGR EWS COVID Remote-Only Desktop-Lockscreen Background`
-    - `ENGR EWS COVID Remote-Only Login Message`
-
-Example:  
-`LabCheckProvision-LabOU -Covidize -LabOudn "OU=ECEB-9999,OU=EWS,OU=Instructional,OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu"`
-
-### -Uncovidize
-Optional switch.  
-"Uncovidizes" the given parent lab OU.  
-The given parent lab OU must be provisioned first.  
-
-When specifying the `-Uncovidize` parameter:  
-1. All of the GPOs noted above under the `-Covidize` parameter are unlinked from their respective OUs.
-
-Example:  
-`LabCheckProvision-LabOU -Uncovidize -LabOudn "OU=ECEB-9999,OU=EWS,OU=Instructional,OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu"`
-
 ### -Deprovision
 Optional switch.  
-Deprovisions the given parent lab OU for both remote access and "covidization".  
+Deprovisions the given parent lab OU for remote access.  
 The given parent lab OU must be provisioned, and all AD objects (computer, users, groups, OUs, etc.) must be moved out of the `RemoteEnabled` and `LocalLoginDisabled` sub-OUs first.
 
 When specifying the `-Deprovision` parameter:  
 1. A check is made to see if any AD objects exist in the `RemoteEnabled` or `LocalLoginDisabled` sub-OUs of the given lab OU. If any objects exist in these OUs, the script simply exits without making any changes. If no objects are found then...
 2. The `LocalLoginDisabled` OU is removed (along with all GPO links to it).
 3. The `RemoteEnabled` OU is removed (along with all GPO links to it).
-4. If the two "COVID" GPOs are linked to the parent lab OU (see above), those links are removed. i.e. `-Deprovision` implies `-Uncovidize`.
 
 Example:  
 `LabCheckProvision-LabOU -Deprovision -LabOudn "OU=ECEB-9999,OU=EWS,OU=Instructional,OU=Desktops,OU=Engineering,OU=Urbana,DC=ad,DC=uillinois,DC=edu"`

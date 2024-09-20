@@ -10,12 +10,6 @@ function LabCheckProvision-LabOu {
 		[Parameter(ParameterSetName="Provision")]
 		[switch]$Provision,
 		
-		[Parameter(ParameterSetName="Covidize")]
-		[switch]$Covidize,
-		
-		[Parameter(ParameterSetName="Uncovidize")]
-		[switch]$Uncovidize,
-		
 		[Parameter(ParameterSetName="Deprovision")]
 		[switch]$Deprovision,
 		
@@ -191,38 +185,6 @@ function LabCheckProvision-LabOu {
 		Link "ENGR EWS Restrict local login to admins" $localDisabledOudn
 	}
 	
-	function Covidize($remoteEnabledOudn, $localDisabledOudn) {
-		log "Covidizing..."
-		
-		# Root lab OU
-		Link "ENGR EWS COVID Local-Only Desktop-Lockscreen Background" $LabOudn
-		Link "ENGR EWS COVID Local-Only Login Message" $LabOudn
-		
-		# RemoteEnabled sub-OU
-		Link "ENGR EWS General Lab Desktop-Lockscreen Background" $remoteEnabledOudn
-		Link "ENGR EWS COVID Remote-Enabled (i.e. no) Login Message" $remoteEnabledOudn
-		
-		# LocalLoginDisabled (i.e. Remote-Only) sub-OU
-		Link "ENGR EWS COVID Remote-Only Desktop-Lockscreen Background" $localDisabledOudn
-		Link "ENGR EWS COVID Remote-Only Login Message" $localDisabledOudn
-	}
-		
-	function Uncovidize($remoteEnabledOudn, $localDisabledOudn) {
-		log "Uncovidizing..."
-		
-		# Root lab OU
-		Unlink "ENGR EWS COVID Local-Only Desktop-Lockscreen Background" $LabOudn
-		Unlink "ENGR EWS COVID Local-Only Login Message" $LabOudn
-		
-		# RemoteEnabled sub-OU
-		Unlink "ENGR EWS General Lab Desktop-Lockscreen Background" $remoteEnabledOudn
-		Unlink "ENGR EWS COVID Remote-Enabled (i.e. no) Login Message" $remoteEnabledOudn
-		
-		# LocalLoginDisabled (i.e. Remote-Only) sub-OU
-		Unlink "ENGR EWS COVID Remote-Only Desktop-Lockscreen Background" $localDisabledOudn
-		Unlink "ENGR EWS COVID Remote-Only Login Message" $localDisabledOudn
-	}
-	
 	function Deprovision($remoteEnabledOudn, $localDisabledOudn) {
 		log "Deprovisioning..."
 		
@@ -244,10 +206,6 @@ function LabCheckProvision-LabOu {
 				log "Removing RemoteEnabled and LocalLoginDisabled OUs..." -L 1
 				Delete-Ou $localDisabledOudn
 				Delete-Ou $remoteEnabledOudn
-				
-				log "Unlinking any remaining Covid GPOs from the root lab OU, if they exist..." -L 1
-				Unlink "ENGR EWS COVID Local-Only Desktop-Lockscreen Background" $LabOudn 2
-				Unlink "ENGR EWS COVID Local-Only Login Message" $LabOudn 2
 			}
 		}
 		else {
@@ -270,8 +228,6 @@ function LabCheckProvision-LabOu {
 			log "LocalLoginDisabled OUDN: `"$localDisabledOudn`"." -L 1
 	
 			if($Provision) { Provision $remoteEnabledOudn $localDisabledOudn }
-			elseif($Covidize) { Covidize $remoteEnabledOudn $localDisabledOudn }
-			elseif($Uncovidize) { Uncovidize $remoteEnabledOudn $localDisabledOudn }
 			elseif($Deprovision) { Deprovision $remoteEnabledOudn $localDisabledOudn }
 			else { log "No action switch was specified!" }
 		}
